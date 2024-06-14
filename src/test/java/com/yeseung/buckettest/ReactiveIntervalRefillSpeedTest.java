@@ -1,6 +1,5 @@
 package com.yeseung.buckettest;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +15,13 @@ import java.util.Collections;
 import java.util.stream.IntStream;
 
 @SpringBootTest(properties = {
-        "bucket4j.filters[0].cache-name=buckets",
-        "bucket4j.filters[0].filter-method=webflux",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].capacity=5",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].time=10",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].unit=seconds",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].refill-speed=interval",
-        "bucket4j.filters[0].url=^(/hello)",
+    "bucket4j.filters[0].cache-name=buckets",
+    "bucket4j.filters[0].filter-method=webflux",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].capacity=5",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].time=10",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].unit=seconds",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].refill-speed=interval",
+    "bucket4j.filters[0].url=^(/hello).*",
 })
 @AutoConfigureWebTestClient
 @AutoConfigureMockMvc
@@ -40,29 +39,29 @@ class ReactiveIntervalRefillSpeedTest {
     void helloTest() throws Exception {
         String url = "/hello";
         IntStream.rangeClosed(1, 5)
-                .boxed()
-                .sorted(Collections.reverseOrder())
-                .forEach(counter -> successfulWebRequest(url, counter - 1));
+            .boxed()
+            .sorted(Collections.reverseOrder())
+            .forEach(counter -> successfulWebRequest(url, counter - 1));
 
         blockedWebRequestDueToRateLimit(url);
     }
 
     private void blockedWebRequestDueToRateLimit(String url) {
         rest
-                .get()
-                .uri(url)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().jsonPath("error", "Too many requests!");
+            .get()
+            .uri(url)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+            .expectBody().jsonPath("error", "Too many requests!");
     }
 
     private void successfulWebRequest(String url, Integer remainingTries) {
         rest
-                .get()
-                .uri(url)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().valueEquals("X-Rate-Limit-Remaining", String.valueOf(remainingTries));
+            .get()
+            .uri(url)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().valueEquals("X-Rate-Limit-Remaining", String.valueOf(remainingTries));
     }
 
 }

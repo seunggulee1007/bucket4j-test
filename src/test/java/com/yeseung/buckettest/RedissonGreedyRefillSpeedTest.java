@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
 @Import(RedissonConfiguration.class)
-public class RedissonGreadyRefillSpeedTest extends ReactiveGreadyRefillSpeedTest {
+public class RedissonGreedyRefillSpeedTest extends ReactiveGreedyRefillSpeedTest {
 
     @Container
     static final GenericContainer redis =

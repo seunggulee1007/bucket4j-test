@@ -7,7 +7,10 @@ import com.giffing.bucket4j.spring.boot.starter.context.properties.Bucket4JBootP
 import com.giffing.bucket4j.spring.boot.starter.context.properties.Bucket4JConfiguration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,31 +30,31 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
 
 @SpringBootTest(properties = {
-        "bucket4j.enabled=true",
-        "bucket4j.filter-config-cache-name=filterConfigCache",
-        "bucket4j.filter-config-caching-enabled=true",
-        "bucket4j.filters[0].cache-name=buckets",
-        "bucket4j.filters[0].id=filter1",
-        "bucket4j.filters[0].filter-method=webflux",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].capacity=5",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].time=10",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].unit=seconds",
-        "bucket4j.filters[0].url=^(/hello).*",
-        "bucket4j.filters[1].cache-name=buckets",
-        "bucket4j.filters[1].id=filter2",
-        "bucket4j.filters[1].filter-method=webflux",
-        "bucket4j.filters[1].rate-limits[0].bandwidths[0].capacity=10",
-        "bucket4j.filters[1].rate-limits[0].bandwidths[0].time=10",
-        "bucket4j.filters[1].rate-limits[0].bandwidths[0].unit=seconds",
-        "bucket4j.filters[1].url=^(/world).*",
-        "bucket4j.filters[2].cache-name=buckets",
-        "bucket4j.filters[2].id=filter3",
-        "bucket4j.filters[2].filter-method=webflux",
-        "bucket4j.filters[2].rate-limits[0].bandwidths[0].capacity=5",
-        "bucket4j.filters[2].rate-limits[0].bandwidths[0].time=10",
-        "bucket4j.filters[2].rate-limits[0].bandwidths[0].unit=seconds",
-        "bucket4j.filters[2].rate-limits[0].post-execute-condition=getStatus() eq 401",
-        "bucket4j.filters[2].url=^(/secure).*"
+    "bucket4j.enabled=true",
+    "bucket4j.filter-config-cache-name=filterConfigCache",
+    "bucket4j.filter-config-caching-enabled=true",
+    "bucket4j.filters[0].cache-name=buckets",
+    "bucket4j.filters[0].id=filter1",
+    "bucket4j.filters[0].filter-method=webflux",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].capacity=5",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].time=10",
+    "bucket4j.filters[0].rate-limits[0].bandwidths[0].unit=seconds",
+    "bucket4j.filters[0].url=^(/hello).*",
+    "bucket4j.filters[1].cache-name=buckets",
+    "bucket4j.filters[1].id=filter2",
+    "bucket4j.filters[1].filter-method=webflux",
+    "bucket4j.filters[1].rate-limits[0].bandwidths[0].capacity=10",
+    "bucket4j.filters[1].rate-limits[0].bandwidths[0].time=10",
+    "bucket4j.filters[1].rate-limits[0].bandwidths[0].unit=seconds",
+    "bucket4j.filters[1].url=^(/world).*",
+    "bucket4j.filters[2].cache-name=buckets",
+    "bucket4j.filters[2].id=filter3",
+    "bucket4j.filters[2].filter-method=webflux",
+    "bucket4j.filters[2].rate-limits[0].bandwidths[0].capacity=5",
+    "bucket4j.filters[2].rate-limits[0].bandwidths[0].time=10",
+    "bucket4j.filters[2].rate-limits[0].bandwidths[0].unit=seconds",
+    "bucket4j.filters[2].rate-limits[0].post-execute-condition=getStatus() eq 401",
+    "bucket4j.filters[2].url=^(/secure).*"
 })
 @AutoConfigureWebTestClient
 @AutoConfigureMockMvc
@@ -74,22 +77,14 @@ class ReactiveRateLimitTest {
     @Autowired
     WebTestClient rest;
 
-    //@BeforeEach
-    public void setup() {
-        this.rest = WebTestClient
-                .bindToApplicationContext(this.context)
-                .configureClient()
-                .build();
-    }
-
     @Test
     @Order(1)
     void helloTest() {
         String url = "/hello";
         IntStream.rangeClosed(1, 5)
-                .boxed()
-                .sorted(Collections.reverseOrder())
-                .forEach(counter -> successfulWebRequest(url, counter - 1));
+            .boxed()
+            .sorted(Collections.reverseOrder())
+            .forEach(counter -> successfulWebRequest(url, counter - 1));
 
         blockedWebRequestDueToRateLimit(url);
     }
@@ -99,9 +94,9 @@ class ReactiveRateLimitTest {
     void worldTest() {
         String url = "/world";
         IntStream.rangeClosed(1, 10)
-                .boxed()
-                .sorted(Collections.reverseOrder())
-                .forEach(counter -> successfulWebRequest(url, counter - 1));
+            .boxed()
+            .sorted(Collections.reverseOrder())
+            .forEach(counter -> successfulWebRequest(url, counter - 1));
 
         blockedWebRequestDueToRateLimit(url);
     }
@@ -111,10 +106,10 @@ class ReactiveRateLimitTest {
     void invalidNonMatchingIdReplaceConfigTest() throws Exception {
         Bucket4JConfiguration filter = getFilterConfigClone(FILTER_ID);
         updateFilterCache(NONEXISTENT_FILTER_ID, objectMapper.writeValueAsString(filter))
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$").value(
-                        containsString("The id in the path does not match the id in the request body.")
-                );
+            .expectStatus().isBadRequest()
+            .expectBody().jsonPath("$").value(
+                containsString("The id in the path does not match the id in the request body.")
+            );
     }
 
     @Test
@@ -123,10 +118,10 @@ class ReactiveRateLimitTest {
         Bucket4JConfiguration filter = getFilterConfigClone(FILTER_ID);
         filter.setId(NONEXISTENT_FILTER_ID);
         updateFilterCache(filter)
-                .expectStatus().isNotFound()
-                .expectBody().jsonPath("$").value(
-                        containsString("No filter with id 'nonexistent' could be found.")
-                );
+            .expectStatus().isNotFound()
+            .expectBody().jsonPath("$").value(
+                containsString("No filter with id 'nonexistent' could be found.")
+            );
     }
 
     @Test
@@ -134,10 +129,10 @@ class ReactiveRateLimitTest {
     void invalidVersionReplaceConfigTest() throws Exception {
         Bucket4JConfiguration filter = getFilterConfigClone(FILTER_ID);
         updateFilterCache(filter)
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$").value(
-                        containsString("The new configuration should have a higher version than the current configuration.")
-                );
+            .expectStatus().isBadRequest()
+            .expectBody().jsonPath("$").value(
+                containsString("The new configuration should have a higher version than the current configuration.")
+            );
     }
 
     @Test
@@ -147,10 +142,10 @@ class ReactiveRateLimitTest {
         filter.setMinorVersion(filter.getMinorVersion() + 1);
         filter.setFilterMethod(FilterMethod.GATEWAY);
         updateFilterCache(filter)
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$").value(
-                        containsString("It is not possible to modify the filterMethod of an existing filter.")
-                );
+            .expectStatus().isBadRequest()
+            .expectBody().jsonPath("$").value(
+                containsString("It is not possible to modify the filterMethod of an existing filter.")
+            );
     }
 
     @Test
@@ -160,10 +155,10 @@ class ReactiveRateLimitTest {
         filter.setMinorVersion(filter.getMinorVersion() + 1);
         filter.setFilterOrder(filter.getFilterOrder() + 1);
         updateFilterCache(filter)
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$").value(
-                        containsString("It is not possible to modify the filterOrder of an existing filter.")
-                );
+            .expectStatus().isBadRequest()
+            .expectBody().jsonPath("$").value(
+                containsString("It is not possible to modify the filterOrder of an existing filter.")
+            );
     }
 
     @Test
@@ -173,10 +168,10 @@ class ReactiveRateLimitTest {
         filter.setMinorVersion(filter.getMinorVersion() + 1);
         filter.setCacheName(NONEXISTENT_FILTER_ID);
         updateFilterCache(filter)
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$").value(
-                        containsString("It is not possible to modify the cacheName of an existing filter.")
-                );
+            .expectStatus().isBadRequest()
+            .expectBody().jsonPath("$").value(
+                containsString("It is not possible to modify the cacheName of an existing filter.")
+            );
     }
 
     @Test
@@ -186,14 +181,14 @@ class ReactiveRateLimitTest {
         filter.setMinorVersion(filter.getMinorVersion() + 1);
         DocumentContext documentContext = JsonPath.parse(objectMapper.writeValueAsString(filter));
         String json = documentContext
-                .add("$.rateLimits[0].executePredicates", "INVALID-EXEC=TEST")
-                .jsonString();
+            .add("$.rateLimits[0].executePredicates", "INVALID-EXEC=TEST")
+            .jsonString();
         updateFilterCache(filter.getId(), json)
-                .expectStatus().isBadRequest()
-                .expectBody()
-                .jsonPath("$.message").isEqualTo("Configuration validation failed")
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0]").isEqualTo("Invalid predicate name: INVALID-EXEC");
+            .expectStatus().isBadRequest()
+            .expectBody()
+            .jsonPath("$.message").isEqualTo("Configuration validation failed")
+            .jsonPath("$.errors.length()").isEqualTo(1)
+            .jsonPath("$.errors[0]").isEqualTo("Invalid predicate name: INVALID-EXEC");
     }
 
     @Test
@@ -203,14 +198,14 @@ class ReactiveRateLimitTest {
         filter.setMinorVersion(filter.getMinorVersion() + 1);
         DocumentContext documentContext = JsonPath.parse(objectMapper.writeValueAsString(filter));
         String json = documentContext
-                .add("$.rateLimits[0].executePredicates", "INVALID-EXEC=TEST")
-                .add("$.rateLimits[0].skipPredicates", "INVALID-SKIP=TEST")
-                .jsonString();
+            .add("$.rateLimits[0].executePredicates", "INVALID-EXEC=TEST")
+            .add("$.rateLimits[0].skipPredicates", "INVALID-SKIP=TEST")
+            .jsonString();
         updateFilterCache(filter.getId(), json)
-                .expectStatus().isBadRequest()
-                .expectBody()
-                .jsonPath("$.message").isEqualTo("Configuration validation failed")
-                .jsonPath("$.errors[0]").isEqualTo("Invalid predicate names: INVALID-EXEC, INVALID-SKIP");
+            .expectStatus().isBadRequest()
+            .expectBody()
+            .jsonPath("$.message").isEqualTo("Configuration validation failed")
+            .jsonPath("$.errors[0]").isEqualTo("Invalid predicate names: INVALID-EXEC, INVALID-SKIP");
     }
 
     @Test
@@ -233,8 +228,8 @@ class ReactiveRateLimitTest {
 
     private Bucket4JConfiguration getFilterConfigClone(String id) throws JsonProcessingException {
         Bucket4JConfiguration config = properties.getFilters()
-                .stream()
-                .filter(x -> id.matches(x.getId())).findFirst().orElse(null);
+            .stream()
+            .filter(x -> id.matches(x.getId())).findFirst().orElse(null);
         assertThat(config).isNotNull();
         //returns a clone to prevent modifying the original in the properties
         return objectMapper.readValue(objectMapper.writeValueAsString(config), Bucket4JConfiguration.class);
@@ -246,28 +241,28 @@ class ReactiveRateLimitTest {
 
     private WebTestClient.ResponseSpec updateFilterCache(String filterId, String content) {
         return rest.post()
-                .uri("/filters/".concat(filterId))
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(content)
-                .exchange();
+            .uri("/filters/".concat(filterId))
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(content)
+            .exchange();
     }
 
     private void successfulWebRequest(String url, Integer remainingTries) {
         rest
-                .get()
-                .uri(url)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().valueEquals("X-Rate-Limit-Remaining", String.valueOf(remainingTries));
+            .get()
+            .uri(url)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().valueEquals("X-Rate-Limit-Remaining", String.valueOf(remainingTries));
     }
 
     private void blockedWebRequestDueToRateLimit(String url) {
         rest
-                .get()
-                .uri(url)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().jsonPath("error", "Too many requests!");
+            .get()
+            .uri(url)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+            .expectBody().jsonPath("error", "Too many requests!");
     }
 
 }
