@@ -1,18 +1,79 @@
 package com.yeseung.buckettest;
 
-import lombok.Getter;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import com.giffing.bucket4j.spring.boot.starter.config.cache.CacheManager;
+import com.giffing.bucket4j.spring.boot.starter.context.properties.Bucket4JConfiguration;
+import com.giffing.bucket4j.spring.boot.starter.utils.Bucket4JUtils;
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/test")
+import java.util.List;
+import java.util.Set;
+
+@RestController
 public class TestController {
 
-    @GetMapping
-    public String test(String test) {
-        return test;
+    private final Validator validator;
+
+    private final CacheManager<String, Bucket4JConfiguration> configCacheManager;
+
+
+    @GetMapping("hello")
+    public ResponseEntity<String> hello() {
+        return ResponseEntity.ok("Hello World");
     }
 
+    @GetMapping("world")
+    public ResponseEntity<String> world() {
+        return ResponseEntity.ok("Hello World");
+    }
+
+    public TestController(Validator validator, @Nullable CacheManager<String, Bucket4JConfiguration> configCacheManager){
+        this.validator = validator;
+        this.configCacheManager = configCacheManager;
+    }
+
+    /**
+     * Example of how a filter configuration can be updated during runtime
+     * @param filterId id of the filter to update
+     * @param newConfig the new filter configuration
+     * @return
+     */
+    @PostMapping("filters/{filterId}")
+    public ResponseEntity<?> updateConfig(
+        @PathVariable String filterId,
+        @RequestBody Bucket4JConfiguration newConfig) {
+        if(configCacheManager == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Dynamic updating is disabled");
+
+        //validate that the path id matches the body
+        if (!newConfig.getId().equals(filterId)) {
+            return ResponseEntity.badRequest().body("The id in the path does not match the id in the request body.");
+        }
+
+        //validate that there are no errors by the Jakarta validation
+        Set<ConstraintViolation<Bucket4JConfiguration>> violations = validator.validate(newConfig);
+        if (!violations.isEmpty()) {
+            List<String> errors = violations.stream().map(ConstraintViolation::getMessage).toList();
+            return ResponseEntity.badRequest().body(new ValidationErrorResponse("Configuration validation failed", errors));
+        }
+
+        //retrieve the old config and validate that it can be replaced by the new config
+        Bucket4JConfiguration oldConfig = configCacheManager.getValue(filterId);
+        ResponseEntity<String> validationResponse = Bucket4JUtils.validateConfigurationUpdate(oldConfig, newConfig);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+
+        //insert the new config into the cache, so it will trigger the cacheUpdateListeners
+        configCacheManager.setValue(filterId, newConfig);
+
+        return ResponseEntity.ok().build();
+    }
+
+    private record ValidationErrorResponse(String message, List<String> errors) {}
 
 }

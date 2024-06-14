@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.1'
+    id 'org.springframework.boot' version '3.2.6'
     id 'io.spring.dependency-management' version '1.1.5'
 }
 
@@ -9,7 +9,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -24,16 +24,34 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    testImplementation 'io.projectreactor:reactor-test'
     compileOnly 'org.projectlombok:lombok'
-    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.13.1'
+    // https://mvnrepository.com/artifact/com.giffing.bucket4j.spring.boot.starter/bucket4j-spring-boot-starter
+    implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.7'
+    // https://mvnrepository.com/artifact/com.giffing.bucket4j.spring.boot.starter/bucket4j-spring-boot-starter-context
+    implementation group: 'com.giffing.bucket4j.spring.boot.starter', name: 'bucket4j-spring-boot-starter-context', version: '0.12.7'
+
+    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core
+    implementation group: 'com.bucket4j', name: 'bucket4j-core', version: '8.10.1'
+
+    implementation 'org.redisson:redisson-spring-boot-starter:3.27.1'
+    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j-redis
+    implementation group: 'com.bucket4j', name: 'bucket4j-redis', version: '8.10.1'
+    // https://mvnrepository.com/artifact/io.netty/netty-all
+    implementation 'io.netty:netty-all:4.1.111.Final'
 
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    // https://mvnrepository.com/artifact/com.giffing.bucket4j.spring.boot.starter/general-tests
+    implementation 'com.giffing.bucket4j.spring.boot.starter:general-tests:0.11.0'
+
     testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'com.redis.testcontainers:testcontainers-redis-junit:1.6.4'
     runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
