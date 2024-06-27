@@ -14,14 +14,14 @@ import org.testcontainers.utility.DockerImageName;
 public class RedissonServletRateLimitTest extends ReactiveRateLimitTest {
 
     @Container
-    static final GenericContainer redis =
-            new GenericContainer(DockerImageName.parse("redis:7"))
-                    .withExposedPorts(6379);
+    static final GenericContainer<?> redis =
+        new GenericContainer(DockerImageName.parse("redis:7"))
+            .withExposedPorts(6379);
 
     @DynamicPropertySource
     static void redisProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", () -> redis.getHost());
-        registry.add("spring.data.redis.port", () -> redis.getFirstMappedPort());
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
 
 }

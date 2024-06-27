@@ -33,9 +33,22 @@ bucket4j:
       rate-limits:
         - tokens-inheritance-strategy: reset
           bandwidths:
-            - id: bandwidth3
+            - id: bandwidth2
               capacity: 10
               time: 10
+              unit: seconds
+              refill-speed: interval
+    - id: parking
+      major-version: 1
+      cache-name: buckets_test
+      filter-method: webflux
+      url: ^(/api/parking).*
+      rate-limits:
+        - tokens-inheritance-strategy: reset
+          bandwidths:
+            - id: bandwidth3
+              capacity: 10
+              time: 20
               unit: seconds
               refill-speed: interval
 
